@@ -335,7 +335,8 @@ def parse_arguments():
     arg_parser.add_argument("--difficulty",
                             help="Desired board difficulty",
                             type=int,
-                            choices=[1, 2, 3])
+                            choices=[1, 2, 3, 4, 5, 6],
+                            default=3)
 
     # Creates a dictionary of keys = argument flag, and value = argument
     args = vars(arg_parser.parse_args())
