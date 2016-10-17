@@ -1,5 +1,9 @@
 #!/usr/bin/python
 
+# This code contains other GPL licensed code taken from the following sites:
+# http://newcoder.io/gui/
+# http://codereview.stackexchange.com/a/88866
+
 import argparse
 import random
 import copy
@@ -335,8 +339,8 @@ def parse_arguments():
     arg_parser.add_argument("--difficulty",
                             help="Desired board difficulty",
                             type=int,
-                            choices=[1, 2, 3, 4, 5, 6],
-                            default=3)
+                            choices=range(7),
+                            default=5)
 
     # Creates a dictionary of keys = argument flag, and value = argument
     args = vars(arg_parser.parse_args())
