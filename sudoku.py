@@ -2,6 +2,7 @@
 
 import argparse
 import random
+import copy
 
 from Tkinter import Tk, Canvas, Frame, Button, BOTH, TOP, BOTTOM
 
@@ -98,7 +99,7 @@ class SudokuUI(Frame):
     # End def
 
     def __draw_victory(self):
-        # create a oval (which will be a circle)
+        # create an oval (which will be a circle)
         x0 = y0 = MARGIN + SIDE * 2
         x1 = y1 = MARGIN + SIDE * 7
         self.canvas.create_oval(
@@ -129,7 +130,9 @@ class SudokuUI(Frame):
             # if cell was selected already - deselect it
             if (row, col) == (self.row, self.col):
                 self.row, self.col = -1, -1
-            elif self.game.puzzle[row][col] == 0:
+            #elif self.game.puzzle[row][col] == 0:
+            elif self.game.start_puzzle[row][col] == 0:
+            #elif True:
                 self.row, self.col = row, col
             # End if/else block
         else:
@@ -160,21 +163,22 @@ class SudokuUI(Frame):
         self.canvas.delete("victory")
         self.__draw_puzzle()
     # End def
+# End class
 
 
 class SudokuBoard(object):
     """
     Sudoku Board representation
     """
+    
     def __init__(self, board_file):
         self.board = self.__create_board(board_file)
     # End def
 
     def __create_board(self, board_file):
         board = []
+        
         for line in board_file:
-            line = line.strip()
-            
             if len(line) != 9:
                 raise SudokuError(
                     "Each line in the sudoku puzzle must be 9 chars long."
@@ -183,13 +187,11 @@ class SudokuBoard(object):
             board.append([])
 
             for c in line:
-                if not c.isdigit():
-                    raise SudokuError(
-                        "Valid characters for a sudoku puzzle must be in 0-9"
-                    )
+                if c == None:
+                    c = 0
                 # End if
                 
-                board[-1].append(int(c))
+                board[-1].append(c)
             # End for
         # End for
 
@@ -199,6 +201,7 @@ class SudokuBoard(object):
         
         return board
     # End def
+# End class
 
 
 class SudokuGame(object):
@@ -206,9 +209,11 @@ class SudokuGame(object):
     A Sudoku game, in charge of storing the state of the board and checking
     whether the puzzle is completed.
     """
-    def __init__(self, board_file):
+    def __init__(self, board_file, board_solution):
         self.board_file = board_file
+        self.board_solution = board_solution
         self.start_puzzle = SudokuBoard(board_file).board
+    # End def
 
     def start(self):
         self.game_over = False
@@ -217,31 +222,52 @@ class SudokuGame(object):
             self.puzzle.append([])
             for j in xrange(9):
                 self.puzzle[i].append(self.start_puzzle[i][j])
+            # End for
+        # End for
+    # End def
 
     def check_win(self):
         for row in xrange(9):
             if not self.__check_row(row):
                 return False
+            # End If
+        # End for
+        
         for column in xrange(9):
             if not self.__check_column(column):
                 return False
+            # End if
+        # End for
+        
         for row in xrange(3):
             for column in xrange(3):
                 if not self.__check_square(row, column):
                     return False
-        self.game_over = True
-        return True
+                # End if
+            # End for
+        # End for
+        
+        if self.puzzle != self.board_solution:
+            return False
+        else:
+            self.game_over = True
+            return True
+        # End 
+    # End def
 
     def __check_block(self, block):
         return set(block) == set(range(1, 10))
+    # End def
 
     def __check_row(self, row):
         return self.__check_block(self.puzzle[row])
+    # End def
 
     def __check_column(self, column):
         return self.__check_block(
             [self.puzzle[row][column] for row in xrange(9)]
         )
+    # End def
 
     def __check_square(self, row, column):
         return self.__check_block(
@@ -251,6 +277,8 @@ class SudokuGame(object):
                 for c in xrange(column * 3, (column + 1) * 3)
             ]
         )
+    # End def
+# End class
 
 def make_board(m=3, diff=1):
     """Return a random filled m**2 x m**2 Sudoku board."""
@@ -283,18 +311,19 @@ def make_board(m=3, diff=1):
     # End def
     
     filled_board = search()
+    sol = copy.deepcopy(filled_board)
     
     # Randomly remove numbers from every line
     for lst in filled_board:
         rand = range(m**2)
         random.shuffle(rand)
         
-        for i in range(diff*2):
+        for i in range(diff):
             lst[rand[i]] = None
         # End for
     # End for
     
-    return filled_board
+    return filled_board, sol
 # End def
 
 def parse_arguments():
@@ -317,32 +346,13 @@ def parse_arguments():
 if __name__ == '__main__':
     diff = parse_arguments()
     
-    new_board = make_board(diff=diff)
+    new_board, solution = make_board(diff=diff)
 
-    with open('generated.sudoku', 'wb') as fp:
-        for lst in new_board:
-            for item in lst:
-                if item == None:
-                    fp.write("0")
-                else:
-                    fp.write(str(item))
-                # End if/else block
-            # End for
-        
-            fp.write("\n")
-        # End for
-        fp.close()
-    # End with
-    
-    board_name = "generated"
-    
-    with open('%s.sudoku' % board_name, 'r') as boards_file:
-        game = SudokuGame(boards_file)
-        game.start()
+    game = SudokuGame(new_board, solution)
+    game.start()
 
-        root = Tk()
-        SudokuUI(root, game)
-        root.geometry("%dx%d" % (WIDTH, HEIGHT + 40))
-        root.mainloop()
-    # End with
+    root = Tk()
+    SudokuUI(root, game)
+    root.geometry("%dx%d" % (WIDTH, HEIGHT + 40))
+    root.mainloop()
 # End if
