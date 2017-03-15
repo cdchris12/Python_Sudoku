@@ -18,7 +18,7 @@ class SudokuUI(Frame):
     """
     The Tkinter UI, responsible for drawing the board and accepting user input.
     """
-    
+
     def __init__(self, parent, game):
         self.game = game
         Frame.__init__(self, parent)
@@ -122,7 +122,7 @@ class SudokuUI(Frame):
         if self.game.game_over:
             return
         # End if
-        
+
         x, y = event.x, event.y
         if (MARGIN < x < WIDTH - MARGIN and MARGIN < y < HEIGHT - MARGIN):
             self.canvas.focus_set()
@@ -149,7 +149,7 @@ class SudokuUI(Frame):
         if self.game.game_over:
             return
         # End if
-        
+
         if self.row >= 0 and self.col >= 0 and event.char in "1234567890":
             self.game.puzzle[self.row][self.col] = int(event.char)
             self.col, self.row = -1, -1
@@ -173,14 +173,14 @@ class SudokuBoard(object):
     """
     Sudoku Board representation
     """
-    
+
     def __init__(self, board_file):
         self.board = self.__create_board(board_file)
     # End def
 
     def __create_board(self, board_file):
         board = []
-        
+
         for line in board_file:
             if len(line) != 9:
                 raise SudokuError(
@@ -193,7 +193,7 @@ class SudokuBoard(object):
                 if c == None:
                     c = 0
                 # End if
-                
+
                 board[-1].append(c)
             # End for
         # End for
@@ -201,7 +201,7 @@ class SudokuBoard(object):
         if len(board) != 9:
             raise SudokuError("Each sudoku puzzle must be 9 lines long")
         # End if
-        
+
         return board
     # End def
 # End class
@@ -235,13 +235,13 @@ class SudokuGame(object):
                 return False
             # End If
         # End for
-        
+
         for column in xrange(9):
             if not self.__check_column(column):
                 return False
             # End if
         # End for
-        
+
         for row in xrange(3):
             for column in xrange(3):
                 if not self.__check_square(row, column):
@@ -249,13 +249,14 @@ class SudokuGame(object):
                 # End if
             # End for
         # End for
-        
+
         if self.puzzle != self.board_solution:
             return False
         else:
             self.game_over = True
             return True
-        # End 
+        # End if/else block
+        # TODO: Add logic to enable saving of both board states.
     # End def
 
     def __check_block(self, block):
@@ -293,39 +294,39 @@ def make_board(m=3, diff=1):
         i0, j0 = i - i % 3, j - j % 3 # Origin of mxm block
         numbers = list(range(1, n + 1))
         random.shuffle(numbers)
-        
+
         for x in numbers:
             if (x not in board[i]                     # row
                 and all(row[j] != x for row in board) # column
                 and all(x not in row[j0:j0+m]         # block
-                        for row in board[i0:i])): 
+                        for row in board[i0:i])):
                 board[i][j] = x
-                
+
                 if c + 1 >= n**2 or search(c + 1):
                     return board
                 # End if
             # End if
-            
+
         else:
             # No number is valid in this cell: backtrack and try again.
             board[i][j] = None
             return None
         # End for/else block
     # End def
-    
+
     filled_board = search()
     sol = copy.deepcopy(filled_board)
-    
+
     # Randomly remove numbers from every line
     for lst in filled_board:
         rand = range(m**2)
         random.shuffle(rand)
-        
+
         for i in range(diff):
             lst[rand[i]] = None
         # End for
     # End for
-    
+
     return filled_board, sol
 # End def
 
@@ -334,9 +335,9 @@ def parse_arguments():
     Parses arguments of the form:
         sudoku.py <difficulty level>
     """
-    
+
     arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("--difficulty",
+    arg_parser.add_argument("-d", "--difficulty",
                             help="Desired board difficulty",
                             type=int,
                             choices=range(7),
@@ -349,8 +350,15 @@ def parse_arguments():
 
 if __name__ == '__main__':
     diff = parse_arguments()
-    
+    # Supplied difficulty rating, defaults to 5
+
+    #TODO
+    # Check for savegame file
+    # -> If present, load the results from that board into memory.
+    # -> Need copies of the original board and the current board state.
+
     new_board, solution = make_board(diff=diff)
+    # Make two copies of a new board
 
     game = SudokuGame(new_board, solution)
     game.start()
