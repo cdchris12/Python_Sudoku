@@ -78,7 +78,13 @@ class SudokuUI(Frame):
                     x = MARGIN + j * SIDE + SIDE / 2
                     y = MARGIN + i * SIDE + SIDE / 2
                     original = self.game.start_puzzle[i][j]
-                    color = "black" if answer == original else "sea green"
+                    if answer == original:
+                        color = "black"
+                        font = ('Times', 14, 'bold')
+                    else:
+                        color = "sea green"
+                        font = ('Times', 14)
+                    # End if/else statement
                     self.canvas.create_text(
                         x, y, text=answer, tags="numbers", fill=color
                     )
@@ -133,9 +139,7 @@ class SudokuUI(Frame):
             # if cell was selected already - deselect it
             if (row, col) == (self.row, self.col):
                 self.row, self.col = -1, -1
-            #elif self.game.puzzle[row][col] == 0:
             elif self.game.start_puzzle[row][col] == 0:
-            #elif True:
                 self.row, self.col = row, col
             # End if/else block
         else:
@@ -149,6 +153,7 @@ class SudokuUI(Frame):
         if self.game.game_over:
             return
         # End if
+    # End def
 
         if self.row >= 0 and self.col >= 0 and event.char in "1234567890":
             self.game.puzzle[self.row][self.col] = int(event.char)
